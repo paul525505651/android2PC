@@ -1,0 +1,23 @@
+# Android Build Artifacts
+Android_Source/bin/
+Android_Source/obj/
+Android_Source/gen/
+Android_Source/Android2PC.apk
+Android_Source/Android2PC.apk.idsig
+Android_Source/keystore.jks
+
+# Misplaced / Duplicate Source Files
+Android_Source/MainActivity.java
+Android_Source/activity_main.xml
+
+# C# / .NET Build Artifacts
+Android2PC_Server/bin/
+Android2PC_Server/obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# OS Files
+Thumbs.db
+.DS_Store

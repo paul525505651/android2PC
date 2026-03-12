@@ -15,6 +15,9 @@ import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.SeekBar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import java.net.DatagramPacket;
@@ -28,6 +31,11 @@ public class MainActivity extends Activity {
 
     private AutoCompleteTextView etIpAddress;
     private EditText etMessage;
+    private SeekBar sbAutoSendDelay;
+    private TextView tvAutoSendLabel;
+    private Handler autoSendHandler = new Handler();
+    private Runnable autoSendRunnable;
+    private long autoSendDelayMs = 1500; // Default 1.5s
     private static final int PORT = 11000;
     private static final String PREFS_NAME = "AppPrefs";
     private static final String KEY_HISTORY = "IpHistory";
@@ -48,6 +56,55 @@ public class MainActivity extends Activity {
 
         etIpAddress = findViewById(R.id.et_ip_address);
         etMessage = findViewById(R.id.et_message);
+        sbAutoSendDelay = findViewById(R.id.sb_auto_send_delay);
+        tvAutoSendLabel = findViewById(R.id.tv_auto_send_label);
+
+        // Setup SeekBar (0-12 maps to 0.3s - 1.5s)
+        sbAutoSendDelay.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // Formula: 300ms + (progress * 100ms)
+                autoSendDelayMs = 300 + (progress * 100);
+                tvAutoSendLabel.setText(String.format("Auto Send Delay: %.1fs", autoSendDelayMs / 1000.0));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // Initialize label
+        sbAutoSendDelay.setProgress(12); // 1.5s
+        tvAutoSendLabel.setText("Auto Send Delay: 1.5s");
+
+        autoSendRunnable = new Runnable() {
+            @Override
+            public void run() {
+                performSend();
+            }
+        };
+
+        etMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (autoSendHandler != null && autoSendRunnable != null) {
+                    autoSendHandler.removeCallbacks(autoSendRunnable);
+                    if (s.length() > 0) {
+                        autoSendHandler.postDelayed(autoSendRunnable, autoSendDelayMs);
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
 
         // Load History
         historyList = loadHistory();
